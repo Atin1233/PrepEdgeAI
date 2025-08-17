@@ -67,20 +67,21 @@ export async function getQuestionsByType(
   difficulty?: number,
   limit = 20
 ) {
-  let query = db
-    .select()
-    .from(questions)
-    .where(eq(questions.questionType, questionType));
-
+  const conditions = [eq(questions.questionType, questionType)];
+  
   if (subject) {
-    query = query.where(eq(questions.subject, subject));
+    conditions.push(eq(questions.subject, subject));
   }
 
   if (difficulty) {
-    query = query.where(eq(questions.difficulty, difficulty));
+    conditions.push(eq(questions.difficulty, difficulty));
   }
 
-  return await query.limit(limit);
+  return await db
+    .select()
+    .from(questions)
+    .where(and(...conditions))
+    .limit(limit);
 }
 
 export async function createPracticeSession(sessionData: {
