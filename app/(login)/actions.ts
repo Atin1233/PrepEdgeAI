@@ -97,6 +97,37 @@ export const signOut = async () => {
   redirect('/');
 };
 
+export const updateAccount = validatedAction(
+  z.object({
+    name: z.string().min(2).max(100),
+    email: z.string().email().min(3).max(255)
+  }),
+  async (data) => {
+    const user = await getUser();
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    // Check if email is already taken by another user
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email))
+      .limit(1);
+
+    if (existingUser.length > 0 && existingUser[0].id !== user.id) {
+      return { error: 'Email is already taken' };
+    }
+
+    await db
+      .update(users)
+      .set({ name: data.name, email: data.email })
+      .where(eq(users.id, user.id));
+
+    return { success: 'Account updated successfully', name: data.name };
+  }
+);
+
 export const updateUser = validatedAction(
   z.object({
     name: z.string().min(2).max(100).optional(),
@@ -151,6 +182,70 @@ export const updateUser = validatedAction(
     }
 
     return { success: true };
+  }
+);
+
+export const updatePassword = validatedAction(
+  z.object({
+    currentPassword: z.string().min(8).max(100),
+    newPassword: z.string().min(8).max(100),
+    confirmPassword: z.string().min(8).max(100)
+  }),
+  async (data) => {
+    const user = await getUser();
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    if (data.newPassword !== data.confirmPassword) {
+      return { error: 'New password and confirmation password do not match' };
+    }
+
+    const isCurrentPasswordValid = await comparePasswords(
+      data.currentPassword,
+      user.passwordHash
+    );
+
+    if (!isCurrentPasswordValid) {
+      return { error: 'Current password is incorrect' };
+    }
+
+    await db
+      .update(users)
+      .set({ passwordHash: await hashPassword(data.newPassword) })
+      .where(eq(users.id, user.id));
+
+    return { success: 'Password updated successfully' };
+  }
+);
+
+export const deleteAccount = validatedAction(
+  z.object({
+    password: z.string().min(8).max(100)
+  }),
+  async (data) => {
+    const user = await getUser();
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    const isPasswordValid = await comparePasswords(
+      data.password,
+      user.passwordHash
+    );
+
+    if (!isPasswordValid) {
+      return { error: 'Password is incorrect' };
+    }
+
+    await db
+      .update(users)
+      .set({ deletedAt: new Date() })
+      .where(eq(users.id, user.id));
+
+    const cookieStore = await cookies();
+    cookieStore.delete('session');
+    redirect('/');
   }
 );
 
