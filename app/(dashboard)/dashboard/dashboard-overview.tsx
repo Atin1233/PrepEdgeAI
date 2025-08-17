@@ -2,6 +2,8 @@
 
 import { Target, Clock, TrendingUp, BookOpen } from 'lucide-react';
 
+// PrepEdge AI Dashboard Overview Component
+
 interface User {
   id: number;
   name: string;
