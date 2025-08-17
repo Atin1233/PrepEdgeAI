@@ -1,14 +1,7 @@
-import { getUser } from '@/lib/db/queries';
 import { PracticeOptions } from './practice-options';
 import { PracticeHistory } from './practice-history';
 
-export default async function PracticePage() {
-  const user = await getUser();
-
-  if (!user) {
-    return null;
-  }
-
+export default function PracticePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -26,4 +19,4 @@ export default async function PracticePage() {
       <PracticeHistory />
     </div>
   );
-} 
+}

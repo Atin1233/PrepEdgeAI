@@ -1,15 +1,15 @@
-import { getUser } from '@/lib/db/queries';
 import { DashboardOverview } from './dashboard-overview';
 import { QuickActions } from './quick-actions';
 import { RecentActivity } from './recent-activity';
 import { StudyProgress } from './study-progress';
 
-export default async function DashboardPage() {
-  const user = await getUser();
-
-  if (!user) {
-    return null;
-  }
+export default function DashboardPage() {
+  // Mock user data for demo
+  const user = {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com',
+  };
 
   return (
     <div className="space-y-6">
