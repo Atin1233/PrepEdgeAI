@@ -5,33 +5,51 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Lock, Trash2, Loader2 } from 'lucide-react';
-import { useActionState } from 'react';
 import { updatePassword, deleteAccount } from '@/app/(login)/actions';
-
-type PasswordState = {
-  currentPassword?: string;
-  newPassword?: string;
-  confirmPassword?: string;
-  error?: string;
-  success?: string;
-};
-
-type DeleteState = {
-  password?: string;
-  error?: string;
-  success?: string;
-};
+import { useState } from 'react';
 
 export default function SecurityPage() {
-  const [passwordState, passwordAction, isPasswordPending] = useActionState<
-    PasswordState,
-    FormData
-  >(updatePassword, {});
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
-  const [deleteState, deleteAction, isDeletePending] = useActionState<
-    DeleteState,
-    FormData
-  >(deleteAccount, {});
+  async function handlePasswordSubmit(formData: FormData) {
+    setPasswordLoading(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+    
+    try {
+      const result = await updatePassword(formData);
+      if (result?.error) {
+        setPasswordError(result.error);
+      } else if (result?.success) {
+        setPasswordSuccess(result.success);
+      }
+    } catch (err) {
+      setPasswordError('An error occurred. Please try again.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  }
+
+  async function handleDeleteSubmit(formData: FormData) {
+    setDeleteLoading(true);
+    setDeleteError('');
+    
+    try {
+      const result = await deleteAccount(formData);
+      if (result?.error) {
+        setDeleteError(result.error);
+      }
+    } catch (err) {
+      setDeleteError('An error occurred. Please try again.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -43,7 +61,7 @@ export default function SecurityPage() {
           <CardTitle>Password</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" action={passwordAction}>
+          <form className="space-y-4" action={handlePasswordSubmit}>
             <div>
               <Label htmlFor="current-password" className="mb-2">
                 Current Password
@@ -56,7 +74,6 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
-                defaultValue={passwordState.currentPassword}
               />
             </div>
             <div>
@@ -71,7 +88,6 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
-                defaultValue={passwordState.newPassword}
               />
             </div>
             <div>
@@ -85,21 +101,20 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
-                defaultValue={passwordState.confirmPassword}
               />
             </div>
-            {passwordState.error && (
-              <p className="text-red-500 text-sm">{passwordState.error}</p>
+            {passwordError && (
+              <p className="text-red-500 text-sm">{passwordError}</p>
             )}
-            {passwordState.success && (
-              <p className="text-green-500 text-sm">{passwordState.success}</p>
+            {passwordSuccess && (
+              <p className="text-green-500 text-sm">{passwordSuccess}</p>
             )}
             <Button
               type="submit"
               className="bg-orange-500 hover:bg-orange-600 text-white"
-              disabled={isPasswordPending}
+              disabled={passwordLoading}
             >
-              {isPasswordPending ? (
+              {passwordLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Updating...
@@ -123,7 +138,7 @@ export default function SecurityPage() {
           <p className="text-sm text-gray-500 mb-4">
             Account deletion is non-reversable. Please proceed with caution.
           </p>
-          <form action={deleteAction} className="space-y-4">
+          <form action={handleDeleteSubmit} className="space-y-4">
             <div>
               <Label htmlFor="delete-password" className="mb-2">
                 Confirm Password
@@ -135,19 +150,18 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
-                defaultValue={deleteState.password}
               />
             </div>
-            {deleteState.error && (
-              <p className="text-red-500 text-sm">{deleteState.error}</p>
+            {deleteError && (
+              <p className="text-red-500 text-sm">{deleteError}</p>
             )}
             <Button
               type="submit"
               variant="destructive"
               className="bg-red-600 hover:bg-red-700"
-              disabled={isDeletePending}
+              disabled={deleteLoading}
             >
-              {isDeletePending ? (
+              {deleteLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...
