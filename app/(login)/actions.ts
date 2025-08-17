@@ -10,7 +10,7 @@ import { cookies } from 'next/headers';
 import { getUser } from '@/lib/db/queries';
 
 // Validation middleware for server actions
-export function validatedAction<T>(
+export async function validatedAction<T>(
   schema: any,
   handler: (data: T, formData?: FormData) => Promise<any>
 ) {
@@ -37,7 +37,7 @@ export type ActionState = {
 };
 
 // Updated validation middleware for useActionState
-export function validatedActionWithState<T>(
+export async function validatedActionWithState<T>(
   schema: any,
   handler: (data: T) => Promise<ActionState>
 ) {
