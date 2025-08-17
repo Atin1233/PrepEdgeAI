@@ -20,23 +20,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/dashboard/:path*', '/sign-in', '/sign-up']
 };
-
-// Validation middleware for server actions
-export function validatedAction<T>(
-  schema: any,
-  handler: (data: T, formData?: FormData) => Promise<any>
-) {
-  return async (formData: FormData) => {
-    const data = Object.fromEntries(formData.entries());
-    const result = schema.safeParse(data);
-
-    if (!result.success) {
-      return {
-        error: 'Invalid form data',
-        ...data
-      };
-    }
-
-    return handler(result.data, formData);
-  };
-}

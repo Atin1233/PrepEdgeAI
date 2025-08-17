@@ -8,7 +8,53 @@ import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { getUser } from '@/lib/db/queries';
-import { validatedAction } from '@/lib/auth/middleware';
+
+// Validation middleware for server actions
+export function validatedAction<T>(
+  schema: any,
+  handler: (data: T, formData?: FormData) => Promise<any>
+) {
+  return async (formData: FormData) => {
+    const data = Object.fromEntries(formData.entries());
+    const result = schema.safeParse(data);
+
+    if (!result.success) {
+      return {
+        error: 'Invalid form data',
+        ...data
+      };
+    }
+
+    return handler(result.data, formData);
+  };
+}
+
+// Action state type
+export type ActionState = {
+  error?: string;
+  success?: string;
+  [key: string]: any;
+};
+
+// Updated validation middleware for useActionState
+export function validatedActionWithState<T>(
+  schema: any,
+  handler: (data: T) => Promise<ActionState>
+) {
+  return async (state: ActionState, formData: FormData) => {
+    const data = Object.fromEntries(formData.entries());
+    const result = schema.safeParse(data);
+
+    if (!result.success) {
+      return {
+        error: 'Invalid form data',
+        ...data
+      };
+    }
+
+    return handler(result.data);
+  };
+}
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -97,7 +143,7 @@ export const signOut = async () => {
   redirect('/');
 };
 
-export const updateAccount = validatedAction(
+export const updateAccount = validatedActionWithState(
   z.object({
     name: z.string().min(2).max(100),
     email: z.string().email().min(3).max(255)
@@ -125,6 +171,70 @@ export const updateAccount = validatedAction(
       .where(eq(users.id, user.id));
 
     return { success: 'Account updated successfully', name: data.name };
+  }
+);
+
+export const updatePassword = validatedActionWithState(
+  z.object({
+    currentPassword: z.string().min(8).max(100),
+    newPassword: z.string().min(8).max(100),
+    confirmPassword: z.string().min(8).max(100)
+  }),
+  async (data) => {
+    const user = await getUser();
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    if (data.newPassword !== data.confirmPassword) {
+      return { error: 'New password and confirmation password do not match' };
+    }
+
+    const isCurrentPasswordValid = await comparePasswords(
+      data.currentPassword,
+      user.passwordHash
+    );
+
+    if (!isCurrentPasswordValid) {
+      return { error: 'Current password is incorrect' };
+    }
+
+    await db
+      .update(users)
+      .set({ passwordHash: await hashPassword(data.newPassword) })
+      .where(eq(users.id, user.id));
+
+    return { success: 'Password updated successfully' };
+  }
+);
+
+export const deleteAccount = validatedActionWithState(
+  z.object({
+    password: z.string().min(8).max(100)
+  }),
+  async (data) => {
+    const user = await getUser();
+    if (!user) {
+      return { error: 'Not authenticated' };
+    }
+
+    const isPasswordValid = await comparePasswords(
+      data.password,
+      user.passwordHash
+    );
+
+    if (!isPasswordValid) {
+      return { error: 'Password is incorrect' };
+    }
+
+    await db
+      .update(users)
+      .set({ deletedAt: new Date() })
+      .where(eq(users.id, user.id));
+
+    const cookieStore = await cookies();
+    cookieStore.delete('session');
+    redirect('/');
   }
 );
 
@@ -182,70 +292,6 @@ export const updateUser = validatedAction(
     }
 
     return { success: true };
-  }
-);
-
-export const updatePassword = validatedAction(
-  z.object({
-    currentPassword: z.string().min(8).max(100),
-    newPassword: z.string().min(8).max(100),
-    confirmPassword: z.string().min(8).max(100)
-  }),
-  async (data) => {
-    const user = await getUser();
-    if (!user) {
-      return { error: 'Not authenticated' };
-    }
-
-    if (data.newPassword !== data.confirmPassword) {
-      return { error: 'New password and confirmation password do not match' };
-    }
-
-    const isCurrentPasswordValid = await comparePasswords(
-      data.currentPassword,
-      user.passwordHash
-    );
-
-    if (!isCurrentPasswordValid) {
-      return { error: 'Current password is incorrect' };
-    }
-
-    await db
-      .update(users)
-      .set({ passwordHash: await hashPassword(data.newPassword) })
-      .where(eq(users.id, user.id));
-
-    return { success: 'Password updated successfully' };
-  }
-);
-
-export const deleteAccount = validatedAction(
-  z.object({
-    password: z.string().min(8).max(100)
-  }),
-  async (data) => {
-    const user = await getUser();
-    if (!user) {
-      return { error: 'Not authenticated' };
-    }
-
-    const isPasswordValid = await comparePasswords(
-      data.password,
-      user.passwordHash
-    );
-
-    if (!isPasswordValid) {
-      return { error: 'Password is incorrect' };
-    }
-
-    await db
-      .update(users)
-      .set({ deletedAt: new Date() })
-      .where(eq(users.id, user.id));
-
-    const cookieStore = await cookies();
-    cookieStore.delete('session');
-    redirect('/');
   }
 );
 
