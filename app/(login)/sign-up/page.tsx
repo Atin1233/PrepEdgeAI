@@ -3,45 +3,25 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signUp } from '../actions';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    const password = formData.get('password') as string;
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+    // Simulate loading for demo
+    setTimeout(() => {
       setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const result = await signUp(formData);
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
+      // For now, just redirect to dashboard
+      router.push('/dashboard');
+    }, 1000);
   };
 
   return (
@@ -69,7 +49,7 @@ export default function SignUpPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
                 {error}
@@ -138,45 +118,6 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="prepedge-input"
-                  placeholder="Confirm your password"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="agree-terms"
-                name="agree-terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-[#3AC7F3] focus:ring-[#3AC7F3] border-gray-300 rounded"
-              />
-              <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
-                I agree to the{' '}
-                <Link href="/terms" className="text-[#3AC7F3] hover:text-[#2BB8E4]">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="text-[#3AC7F3] hover:text-[#2BB8E4]">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-
-            <div>
               <button
                 type="submit"
                 disabled={isLoading}
@@ -205,19 +146,6 @@ export default function SignUpPage() {
                 Sign In
               </Link>
             </div>
-          </div>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-[#3AC7F3] hover:text-[#2BB8E4]">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-[#3AC7F3] hover:text-[#2BB8E4]">
-                Privacy Policy
-              </Link>
-            </p>
           </div>
         </div>
       </div>

@@ -1,8 +1,6 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import { getUser } from '@/lib/db/queries';
-import { SWRConfig } from 'swr';
 
 export const metadata: Metadata = {
   title: 'PrepEdge AI - Smarter prep. Sharper scores.',
@@ -38,15 +36,7 @@ export default function RootLayout({
       className={`bg-white text-black ${inter.className}`}
     >
       <body className="min-h-[100dvh] bg-white antialiased">
-        <SWRConfig
-          value={{
-            fallback: {
-              '/api/user': getUser(),
-            }
-          }}
-        >
-          {children}
-        </SWRConfig>
+        {children}
       </body>
     </html>
   );

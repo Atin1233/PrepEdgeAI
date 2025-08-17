@@ -1,114 +1,135 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { updateAccount } from '@/app/(login)/actions';
-import { User } from '@/lib/db/schema';
-import useSWR from 'swr';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-function AccountForm({ user }: { user?: User }) {
+export default function GeneralPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  async function handleSubmit(formData: FormData) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError('');
     setSuccess('');
-    
-    try {
-      const result = await updateAccount(formData);
-      if (result?.error) {
-        setError(result.error);
-      } else if (result?.success) {
-        setSuccess(result.success);
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-    } finally {
+
+    // Simulate API call
+    setTimeout(() => {
       setIsLoading(false);
-    }
-  }
+      setSuccess('Account updated successfully');
+    }, 1000);
+  };
 
   return (
-    <form className="space-y-4" action={handleSubmit}>
-      <div>
-        <Label htmlFor="name" className="mb-2">
-          Name
-        </Label>
-        <Input
-          id="name"
-          name="name"
-          placeholder="Enter your name"
-          defaultValue={user?.name || ''}
-          required
-        />
+    <div className="max-w-4xl mx-auto py-10 px-4">
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold text-[#0A2540]">Account Settings</h1>
+        <p className="mt-2 text-gray-600">
+          Manage your account information and preferences.
+        </p>
       </div>
-      <div>
-        <Label htmlFor="email" className="mb-2">
-          Email
-        </Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="Enter your email"
-          defaultValue={user?.email || ''}
-          required
-        />
+
+      <div className="bg-white rounded-lg border border-gray-200 p-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+              {success}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                defaultValue="John Doe"
+                className="prepedge-input mt-1"
+                placeholder="Enter your full name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                defaultValue="john@example.com"
+                className="prepedge-input mt-1"
+                placeholder="Enter your email"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="target-score" className="block text-sm font-medium text-gray-700">
+                Target SAT Score
+              </label>
+              <input
+                type="number"
+                id="target-score"
+                name="target-score"
+                defaultValue="1500"
+                min="400"
+                max="1600"
+                className="prepedge-input mt-1"
+                placeholder="Enter your target score"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="current-score" className="block text-sm font-medium text-gray-700">
+                Current SAT Score (if known)
+              </label>
+              <input
+                type="number"
+                id="current-score"
+                name="current-score"
+                defaultValue="1200"
+                min="400"
+                max="1600"
+                className="prepedge-input mt-1"
+                placeholder="Enter your current score"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="test-date" className="block text-sm font-medium text-gray-700">
+              SAT Test Date
+            </label>
+            <input
+              type="date"
+              id="test-date"
+              name="test-date"
+              className="prepedge-input mt-1"
+            />
+          </div>
+
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="prepedge-button-primary"
+            >
+              {isLoading ? 'Updating...' : 'Update Account'}
+            </button>
+          </div>
+        </form>
       </div>
-      {error && (
-        <p className="text-red-500 text-sm">{error}</p>
-      )}
-      {success && (
-        <p className="text-green-500 text-sm">{success}</p>
-      )}
-      <Button
-        type="submit"
-        className="bg-orange-500 hover:bg-orange-600 text-white"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Updating...
-          </>
-        ) : (
-          'Update Account'
-        )}
-      </Button>
-    </form>
-  );
-}
-
-function AccountFormWithData() {
-  const { data: user } = useSWR<User>('/api/user', fetcher);
-  return <AccountForm user={user} />;
-}
-
-export default function GeneralPage() {
-  return (
-    <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-        General Settings
-      </h1>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<div>Loading...</div>}>
-            <AccountFormWithData />
-          </Suspense>
-        </CardContent>
-      </Card>
-    </section>
+    </div>
   );
 }

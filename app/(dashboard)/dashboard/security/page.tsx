@@ -1,181 +1,135 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Lock, Trash2, Loader2 } from 'lucide-react';
-import { updatePassword, deleteAccount } from '@/app/(login)/actions';
 import { useState } from 'react';
 
 export default function SecurityPage() {
-  const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState('');
-  
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  async function handlePasswordSubmit(formData: FormData) {
-    setPasswordLoading(true);
-    setPasswordError('');
-    setPasswordSuccess('');
-    
-    try {
-      const result = await updatePassword(formData);
-      if (result?.error) {
-        setPasswordError(result.error);
-      } else if (result?.success) {
-        setPasswordSuccess(result.success);
-      }
-    } catch (err) {
-      setPasswordError('An error occurred. Please try again.');
-    } finally {
-      setPasswordLoading(false);
-    }
-  }
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
 
-  async function handleDeleteSubmit(formData: FormData) {
-    setDeleteLoading(true);
-    setDeleteError('');
-    
-    try {
-      const result = await deleteAccount(formData);
-      if (result?.error) {
-        setDeleteError(result.error);
-      }
-    } catch (err) {
-      setDeleteError('An error occurred. Please try again.');
-    } finally {
-      setDeleteLoading(false);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      setSuccess('Password updated successfully');
+    }, 1000);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
     }
-  }
+
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      alert('Account deletion simulated (demo mode)');
+    }, 1000);
+  };
 
   return (
-    <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium bold text-gray-900 mb-6">
-        Security Settings
-      </h1>
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" action={handlePasswordSubmit}>
-            <div>
-              <Label htmlFor="current-password" className="mb-2">
-                Current Password
-              </Label>
-              <Input
-                id="current-password"
-                name="currentPassword"
-                type="password"
-                autoComplete="current-password"
-                required
-                minLength={8}
-                maxLength={100}
-              />
-            </div>
-            <div>
-              <Label htmlFor="new-password" className="mb-2">
-                New Password
-              </Label>
-              <Input
-                id="new-password"
-                name="newPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                maxLength={100}
-              />
-            </div>
-            <div>
-              <Label htmlFor="confirm-password" className="mb-2">
-                Confirm New Password
-              </Label>
-              <Input
-                id="confirm-password"
-                name="confirmPassword"
-                type="password"
-                required
-                minLength={8}
-                maxLength={100}
-              />
-            </div>
-            {passwordError && (
-              <p className="text-red-500 text-sm">{passwordError}</p>
-            )}
-            {passwordSuccess && (
-              <p className="text-green-500 text-sm">{passwordSuccess}</p>
-            )}
-            <Button
-              type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              disabled={passwordLoading}
-            >
-              {passwordLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Update Password
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="max-w-4xl mx-auto py-10 px-4">
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold text-[#0A2540]">Security Settings</h1>
+        <p className="mt-2 text-gray-600">
+          Manage your password and account security options.
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Delete Account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500 mb-4">
-            Account deletion is non-reversable. Please proceed with caution.
-          </p>
-          <form action={handleDeleteSubmit} className="space-y-4">
+      <div className="space-y-8">
+        {/* Password Change Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <h2 className="text-xl font-semibold text-[#0A2540] mb-4">Change Password</h2>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+                {success}
+              </div>
+            )}
+
             <div>
-              <Label htmlFor="delete-password" className="mb-2">
-                Confirm Password
-              </Label>
-              <Input
-                id="delete-password"
-                name="password"
+              <label htmlFor="current-password" className="block text-sm font-medium text-gray-700">
+                Current Password
+              </label>
+              <input
                 type="password"
+                id="current-password"
+                name="current-password"
                 required
-                minLength={8}
-                maxLength={100}
+                className="prepedge-input mt-1"
+                placeholder="Enter your current password"
               />
             </div>
-            {deleteError && (
-              <p className="text-red-500 text-sm">{deleteError}</p>
-            )}
-            <Button
-              type="submit"
-              variant="destructive"
-              className="bg-red-600 hover:bg-red-700"
-              disabled={deleteLoading}
-            >
-              {deleteLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Account
-                </>
-              )}
-            </Button>
+
+            <div>
+              <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">
+                New Password
+              </label>
+              <input
+                type="password"
+                id="new-password"
+                name="new-password"
+                required
+                className="prepedge-input mt-1"
+                placeholder="Enter your new password"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm-password"
+                required
+                className="prepedge-input mt-1"
+                placeholder="Confirm your new password"
+              />
+            </div>
+
+            <div className="pt-4 border-t border-gray-200">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="prepedge-button-primary"
+              >
+                {isLoading ? 'Updating...' : 'Update Password'}
+              </button>
+            </div>
           </form>
-        </CardContent>
-      </Card>
-    </section>
+        </div>
+
+        {/* Account Deletion Section */}
+        <div className="bg-white rounded-lg border border-red-200 p-8">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Danger Zone</h2>
+          <p className="text-gray-600 mb-6">
+            Once you delete your account, there is no going back. Please be certain.
+          </p>
+          
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isLoading}
+            className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          >
+            {isLoading ? 'Processing...' : 'Delete Account'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

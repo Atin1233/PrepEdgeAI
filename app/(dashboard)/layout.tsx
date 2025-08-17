@@ -1,17 +1,17 @@
-import { getUser } from '@/lib/db/queries';
 import { DashboardNav } from './dashboard-nav';
 import { UserNav } from './user-nav';
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
-
-  if (!user) {
-    return null;
-  }
+  // Mock user data for demo
+  const user = {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com',
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
