@@ -160,8 +160,8 @@ export async function updateUserProgress(
       .set({
         questionsAttempted: newAttempted,
         questionsCorrect: newCorrect,
-        masteryLevel: newMastery,
-        averageTime: newAverageTime,
+        masteryLevel: newMastery.toFixed(2),
+        averageTime: newAverageTime.toFixed(2),
         lastPracticed: new Date(),
         updatedAt: new Date(),
       })
@@ -173,8 +173,8 @@ export async function updateUserProgress(
       topic,
       questionsAttempted: 1,
       questionsCorrect: isCorrect ? 1 : 0,
-      masteryLevel: isCorrect ? 1.0 : 0.0,
-      averageTime: timeSpent,
+      masteryLevel: isCorrect ? '1.00' : '0.00',
+      averageTime: timeSpent.toFixed(2),
       lastPracticed: new Date(),
     });
   }
