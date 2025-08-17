@@ -1,42 +1,51 @@
-import { stripe } from '../payments/stripe';
 import { db } from './drizzle';
-import { users, teams, teamMembers } from './schema';
+import { users, questions } from './schema';
 import { hashPassword } from '@/lib/auth/session';
 
-async function createStripeProducts() {
-  console.log('Creating Stripe products and prices...');
+async function createSampleQuestions() {
+  console.log('Creating sample SAT questions...');
 
-  const baseProduct = await stripe.products.create({
-    name: 'Base',
-    description: 'Base subscription plan',
-  });
-
-  await stripe.prices.create({
-    product: baseProduct.id,
-    unit_amount: 800, // $8 in cents
-    currency: 'usd',
-    recurring: {
-      interval: 'month',
-      trial_period_days: 7,
+  const sampleQuestions = [
+    {
+      content: 'If 2x + 3 = 11, what is the value of x?',
+      questionType: 'math',
+      subject: 'algebra',
+      difficulty: 2,
+      correctAnswer: 'C',
+      options: JSON.stringify(['A) 2', 'B) 3', 'C) 4', 'D) 5']),
+      explanation: 'Solve for x: 2x + 3 = 11, so 2x = 8, therefore x = 4.',
+      hints: JSON.stringify(['Subtract 3 from both sides', 'Divide by 2']),
+      tags: JSON.stringify(['linear equations', 'algebra']),
+      isVerified: true,
     },
-  });
-
-  const plusProduct = await stripe.products.create({
-    name: 'Plus',
-    description: 'Plus subscription plan',
-  });
-
-  await stripe.prices.create({
-    product: plusProduct.id,
-    unit_amount: 1200, // $12 in cents
-    currency: 'usd',
-    recurring: {
-      interval: 'month',
-      trial_period_days: 7,
+    {
+      content: 'Which word best completes the sentence: "The scientist was _____ about the results of her experiment."',
+      questionType: 'reading',
+      subject: 'vocabulary',
+      difficulty: 3,
+      correctAnswer: 'B',
+      options: JSON.stringify(['A) ambiguous', 'B) skeptical', 'C) enthusiastic', 'D) negligent']),
+      explanation: 'Skeptical means having doubt or reservations, which fits the context of a scientist being cautious about results.',
+      hints: JSON.stringify(['Consider the context of scientific research', 'Think about appropriate scientific attitudes']),
+      tags: JSON.stringify(['vocabulary', 'context clues']),
+      isVerified: true,
     },
-  });
+    {
+      content: 'Identify the error in this sentence: "Neither the students nor the teacher were prepared for the exam."',
+      questionType: 'writing',
+      subject: 'grammar',
+      difficulty: 3,
+      correctAnswer: 'A',
+      options: JSON.stringify(['A) were should be was', 'B) Neither should be Either', 'C) nor should be or', 'D) No error']),
+      explanation: 'With "neither...nor" constructions, the verb agrees with the subject closest to it. Since "teacher" is singular, use "was".',
+      hints: JSON.stringify(['Check subject-verb agreement', 'Look at the subject closest to the verb']),
+      tags: JSON.stringify(['grammar', 'subject-verb agreement']),
+      isVerified: true,
+    }
+  ];
 
-  console.log('Stripe products and prices created successfully.');
+  await db.insert(questions).values(sampleQuestions);
+  console.log('Sample SAT questions created successfully.');
 }
 
 async function seed() {
@@ -48,29 +57,21 @@ async function seed() {
     .insert(users)
     .values([
       {
+        name: 'Test Student',
         email: email,
         passwordHash: passwordHash,
-        role: "owner",
+        role: 'student',
+        targetScore: 1500,
+        currentScore: 1200,
+        diagnosticCompleted: false,
+        studyPlanGenerated: false,
       },
     ])
     .returning();
 
-  console.log('Initial user created.');
+  console.log('Initial test user created.');
 
-  const [team] = await db
-    .insert(teams)
-    .values({
-      name: 'Test Team',
-    })
-    .returning();
-
-  await db.insert(teamMembers).values({
-    teamId: team.id,
-    userId: user.id,
-    role: 'owner',
-  });
-
-  await createStripeProducts();
+  await createSampleQuestions();
 }
 
 seed()
