@@ -151,7 +151,8 @@ export async function updateUserProgress(
     const newMastery = newCorrect / newAttempted;
     
     // Calculate new average time
-    const totalTime = (progress.averageTime || 0) * currentAttempted + timeSpent;
+    const currentAvgTime = progress.averageTime ? Number(progress.averageTime) : 0;
+    const totalTime = currentAvgTime * currentAttempted + timeSpent;
     const newAverageTime = totalTime / newAttempted;
 
     await db
