@@ -1,7 +1,14 @@
 'use client';
 
 import { Target, Clock, TrendingUp, BookOpen } from 'lucide-react';
-import type { User } from '@/lib/db/schema';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  currentScore?: number;
+  targetScore?: number;
+}
 
 interface DashboardOverviewProps {
   user: User;
