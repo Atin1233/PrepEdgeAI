@@ -144,12 +144,14 @@ export async function updateUserProgress(
 
   if (existingProgress.length > 0) {
     const progress = existingProgress[0];
-    const newAttempted = progress.questionsAttempted + 1;
-    const newCorrect = progress.questionsCorrect + (isCorrect ? 1 : 0);
+    const currentAttempted = progress.questionsAttempted || 0;
+    const currentCorrect = progress.questionsCorrect || 0;
+    const newAttempted = currentAttempted + 1;
+    const newCorrect = currentCorrect + (isCorrect ? 1 : 0);
     const newMastery = newCorrect / newAttempted;
     
     // Calculate new average time
-    const totalTime = (progress.averageTime || 0) * progress.questionsAttempted + timeSpent;
+    const totalTime = (progress.averageTime || 0) * currentAttempted + timeSpent;
     const newAverageTime = totalTime / newAttempted;
 
     await db
@@ -181,8 +183,8 @@ export async function getUserStats(userId: number) {
   const progress = await getUserProgress(userId);
   const sessions = await getPracticeSessions(userId, 50);
 
-  const totalQuestions = progress.reduce((sum, p) => sum + p.questionsAttempted, 0);
-  const totalCorrect = progress.reduce((sum, p) => sum + p.questionsCorrect, 0);
+  const totalQuestions = progress.reduce((sum, p) => sum + (p.questionsAttempted || 0), 0);
+  const totalCorrect = progress.reduce((sum, p) => sum + (p.questionsCorrect || 0), 0);
   const overallAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
   const totalStudyTime = sessions.reduce((sum, s) => {
